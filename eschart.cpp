@@ -849,7 +849,7 @@ void ESChart::readChartFromCSV(QString filePath)
     this->addCurve(head.at(5),head.at(5),QColor(Qt::white),5,Upper_threshold,0);
 }
 
-void ESChart::drawPoint(QPainter& p)
+void ESChart::drawESPoint(QPainter& p)
 {
     _ESPoint* point = pointList[0];
     QPen pen(point->color,point->paintWidth);
@@ -867,5 +867,10 @@ bool ESChart::updateCurrentPoint(QPointF p)
         return true;
     }
     else return false;
+}
+
+void ESChart::drawESLine(QPainter &p)
+{
+    drawESCurve
 }
 

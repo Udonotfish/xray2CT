@@ -457,8 +457,9 @@ public:
 
     void readChartFromCSV(QString filePath);
 
-    void drawPoint(QPainter& p);
+    void drawESPoint(QPainter& p);
     bool updateCurrentPoint(QPointF p);
+    void drawESCurve(QPainter& p);
 };
 
 #endif // ESCHART_H

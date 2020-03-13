@@ -9,7 +9,8 @@ void ESChartWidget::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
 //    m_chart->draw(painter);
-    m_chart->drawPoint(painter);
+    m_chart->drawESPoint(painter);
+    m_chart->drawESLine(painter);
 }
 
 void ESChartWidget::mouseMoveEvent(QMouseEvent *event)
