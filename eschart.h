@@ -26,15 +26,15 @@ typedef struct _ESPoint
     QPointF pos;
 
     _ESPoint(QPointF pf):
-        radius(1),
         color(QColor(255,0,0)),
         paintWidth(5),
+        radius(1),
         bSelPoint(false)
     {
         pos = pf;
     }
 
-}ItemPoint;
+}_ESPoint;
 
 typedef struct _ESCurve
 {
@@ -50,9 +50,9 @@ typedef struct _ESCurve
     vector<_ESPoint> ESWndBezierPoint;
     bool bSmooth;
 
-    _ESCurve()
-        :bSmooth(true)
-        ,penWidth(1)
+    _ESCurve():
+        penWidth(1),
+        bSmooth(true)
     {
 
     }
@@ -92,6 +92,62 @@ typedef struct _ESCurve
             }
         }
 
+    }
+    bool getValueByX(double xValue, double &yValue)
+    {
+        size_t n = ESpoints.size();
+        for(size_t i=0;i<n-1;i++)
+        {
+            if(xValue >= ESpoints[i].pos.x() && xValue <= ESpoints[i+1].pos.x())
+            {
+                return getYOnLineByX(ESpoints[i].pos.x(),
+                              ESpoints[i].pos.y(),
+                              ESpoints[i+1].pos.x(),
+                              ESpoints[i+1].pos.y(),
+                              xValue,
+                              yValue);
+            }
+        }
+
+        return false;
+    }
+
+
+    bool smooth()
+    {
+        vector<int> mapIDs;
+
+        int n = ESWndPoint.size();
+        if(n < 3)
+            return false;
+
+        //smooth:
+//        PubFun::SmoothPolyLine2(ESWndPoint, 170.0);
+
+        //bezier:
+        n = ESWndPoint.size();
+        vector<Ogre::Vector2> ov;
+        for(int i=0;i<n;i++)
+        {
+            Ogre::Vector2 t(ESWndPoint[i].pos.x(), ESWndPoint[i].pos.y());
+            ov.push_back(t);
+        }
+
+        vector<Ogre::Vector2> tResult;
+
+        PubFun::bezier_parsePolyline(ov,n,tResult,0.2,mapIDs);
+
+        ESWndBezierPoint.clear();
+        size_t m = tResult.size();
+        for(size_t i=0;i<m;i++)
+        {
+            ESWndBezierPoint.push_back(_ESPoint(QPointF(tResult[i].x, tResult[i].y)));
+        }
+
+        //thin:
+//        PubFun::thinPolyLineByAngle(ESWndBezierPoint);
+
+        return true;
     }
 
 }_ESCurve;
@@ -314,7 +370,7 @@ public:
 private: //data
 
     //curves
-    vector< ItemCurve* > m_vectCurve;
+    vector< _ESCurve* > m_vectCurve;
 
     //lines
     vector<ItemLine*> m_vectLine;
@@ -439,7 +495,7 @@ public:
 
     void clear();
 
-    bool addCurve(QString sName,QString sCaption,QColor color, int lineWidth, vector<QPointF> &vectPoint,bool bSmooth);
+    bool addCurve(QString sName,QString sCaption,QColor color, int lineWidth, vector<_ESPoint> &vectPoint,bool bSmooth);
 
     bool addLine(QString sName,QString sCaption,QColor color, int lineWidth, double xPos, QString sLeftLineName="",QString sRightLineName="");
 

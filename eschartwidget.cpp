@@ -1,5 +1,6 @@
 #include "eschartwidget.h"
 #include "eschart.h"
+
 ESChartWidget::ESChartWidget(QWidget *parent): QWidget(parent)
 {
 
@@ -9,8 +10,8 @@ void ESChartWidget::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
 //    m_chart->draw(painter);
-    m_chart->drawESPoint(painter);
-    m_chart->drawESLine(painter);
+//    m_chart->drawESPoint(painter);
+    m_chart->drawESCurve(painter);
 }
 
 void ESChartWidget::mouseMoveEvent(QMouseEvent *event)

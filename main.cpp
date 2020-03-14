@@ -1,8 +1,8 @@
 #include <QApplication>
 
-#include <QVTKOpenGLWidget.h>
-#include <vtkSmartPointer.h>
-#include <vtk3DS.h>
+//#include <QVTKOpenGLWidget.h>
+//#include <vtkSmartPointer.h>
+//#include <vtk3DS.h>
 
 #include "eschartwidget.h"
 #include "eschart.h"

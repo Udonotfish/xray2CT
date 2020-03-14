@@ -30,7 +30,11 @@ ESChart::ESChart(QWidget *parent)
     ,m_nPressLineID(-1)
 {
     _ESPoint* point = new _ESPoint(QPointF(100,100));
+    _ESPoint* point1 = new _ESPoint(QPointF(150,150));
+    _ESPoint* point2 = new _ESPoint(QPointF(200,200));
     pointList.push_back(point);
+    pointList.push_back(point1);
+    pointList.push_back(point2);
 }
 
 ESChart::~ESChart()
@@ -348,21 +352,21 @@ void ESChart::convertOri2WndAll()
         size_t n = m_vectCurve.size();
         for(size_t i=0;i<n;i++)
         {
-            ItemCurve* t = m_vectCurve[i];
+            _ESCurve* t = m_vectCurve[i];
             if(t->rcMain == m_rcMain)
                 continue;
 
             //clear old wnd points
-            t->vectWndPoint.clear();
+            t->ESWndPoint.clear();
 
             //calculate new wnd points by ori points and rcMain
-            size_t nPt = t->vectOriPoint.size();
+            size_t nPt = t->ESpoints.size();
             for(size_t j=0; j<nPt; j++)
             {
-                double fx = t->vectOriPoint[j].x();
-                double fy = t->vectOriPoint[j].y();
+                double fx = t->ESpoints[j].pos.x();
+                double fy = t->ESpoints[j].pos.y();
                 convertOri2Wnd(&fx, &fy);
-                t->vectWndPoint.push_back(QPointF(fx, fy));
+                t->ESWndPoint.push_back(QPointF(fx, fy));
 
                 //qDebug() << "ox=" << t->vectOriPoint[j].x() << " oy=" << t->vectOriPoint[j].y();
                 //qDebug() << "fx=" << fx << " fy=" << fy;
@@ -496,7 +500,7 @@ void ESChart::clear()
         m_parent->update();
 }
 
-bool ESChart::addCurve(QString sName, QString sCaption, QColor color, int lineWidth, vector<QPointF> &vectPoint,bool bSmooth)
+bool ESChart::addCurve(QString sName, QString sCaption, QColor color, int lineWidth, vector<_ESPoint> &vectPoint,bool bSmooth)
 {
     int nID = getCurveByName(sName);
     if(nID >= 0)
@@ -505,31 +509,23 @@ bool ESChart::addCurve(QString sName, QString sCaption, QColor color, int lineWi
         return false;
     }
 
-    ItemCurve* pCurve = new ItemCurve;
+    _ESCurve* pCurve = new _ESCurve;
     pCurve->sName = sName;
     pCurve->sCaption = sCaption;
     pCurve->color = color;
     pCurve->penWidth = lineWidth;
-    pCurve->vectOriPoint = vectPoint;
+    pCurve->ESpoints = vectPoint;
     pCurve->bSmooth = bSmooth;
 
     m_vectCurve.push_back(pCurve);
 
     convertOri2WndAll();
 
-    if(bSmooth)
-    {
-        pCurve->smooth();
+//    if(bSmooth)
+//    {
+//        pCurve->smooth();
 
-    }
-
-//    ItemPoint* pPoint = new ItemPoint;
-//    pPoint->color = QColor(255,0,0);
-//    pPoint->index=0;
-//    pPoint->paintWidth=1;
-//    pPoint->pos = vectPoint[pPoint->index];
-//    pPoint->radius = 1;
-//    pPoint->draw();
+//    }
 
     return true;
 }
@@ -783,8 +779,8 @@ bool ESChart::PressOnPoint(QMouseEvent *e)
     currentPoint = nullptr;
     foreach(auto& point, pointList)
     {
-//        if(point->pos.x() == e->pos().x() && point->pos.y() == e->pos().y())
-        if(1)
+        if(abs(point->pos.x() - e->pos().x()) < 5 &&
+           abs(point->pos.y() - e->pos().y()) < 5)
         {
             currentPoint = point;
             qDebug() << "Press On Point!";
@@ -823,30 +819,30 @@ void ESChart::readChartFromCSV(QString filePath)
     }
     QTextStream out(&csv);
     QStringList head = out.readLine().split(",");
-    vector<QPointF> HU_mean;
-    vector<QPointF> HU_mean_smooth;
-    vector<QPointF> HU_std;
-    vector<QPointF> HU_std_smooth;
-    vector<QPointF> Lower_threshold;
-    vector<QPointF> Upper_threshold;
+    vector<_ESPoint> HU_mean;
+    vector<_ESPoint> HU_mean_smooth;
+    vector<_ESPoint> HU_std;
+    vector<_ESPoint> HU_std_smooth;
+    vector<_ESPoint> Lower_threshold;
+    vector<_ESPoint> Upper_threshold;
     int lineNum = 0;
     while(!out.atEnd())
     {
         QStringList lines = out.readLine().split(",");
-        HU_mean.push_back(QPointF(lineNum, lines.at(0).toDouble()));
-        HU_mean_smooth.push_back(QPointF(lineNum, lines.at(1).toDouble()));
-        HU_std.push_back(QPointF(lineNum, lines.at(2).toDouble()));
-        HU_std_smooth.push_back(QPointF(lineNum, lines.at(3).toDouble()));
-        Lower_threshold.push_back(QPointF(lineNum, lines.at(4).toDouble()));
-        Upper_threshold.push_back(QPointF(lineNum, lines.at(5).toDouble()));
+        HU_mean.push_back(_ESPoint(QPointF(lineNum, lines.at(0).toDouble())));
+        HU_mean_smooth.push_back(_ESPoint(QPointF(lineNum, lines.at(1).toDouble())));
+        HU_std.push_back(_ESPoint(QPointF(lineNum, lines.at(2).toDouble())));
+        HU_std_smooth.push_back(_ESPoint(QPointF(lineNum, lines.at(3).toDouble())));
+        Lower_threshold.push_back(_ESPoint(QPointF(lineNum, lines.at(4).toDouble())));
+        Upper_threshold.push_back(_ESPoint(QPointF(lineNum, lines.at(5).toDouble())));
         lineNum++;
     }
     this->addCurve(head.at(0),head.at(0),QColor(Qt::red),1,HU_mean,0);
-    this->addCurve(head.at(1),head.at(1),QColor(Qt::green),1,HU_mean_smooth,0);
-    this->addCurve(head.at(2),head.at(2),QColor(Qt::yellow),1,HU_std,0);
-    this->addCurve(head.at(3),head.at(3),QColor(Qt::blue),1,HU_std_smooth,0);
-    this->addCurve(head.at(4),head.at(4),QColor(Qt::black),5,Lower_threshold,0);
-    this->addCurve(head.at(5),head.at(5),QColor(Qt::white),5,Upper_threshold,0);
+//    this->addCurve(head.at(1),head.at(1),QColor(Qt::green),1,HU_mean_smooth,0);
+//    this->addCurve(head.at(2),head.at(2),QColor(Qt::yellow),1,HU_std,0);
+//    this->addCurve(head.at(3),head.at(3),QColor(Qt::blue),1,HU_std_smooth,0);
+//    this->addCurve(head.at(4),head.at(4),QColor(Qt::black),5,Lower_threshold,0);
+//    this->addCurve(head.at(5),head.at(5),QColor(Qt::white),5,Upper_threshold,0);
 }
 
 void ESChart::drawESPoint(QPainter& p)
@@ -869,8 +865,17 @@ bool ESChart::updateCurrentPoint(QPointF p)
     else return false;
 }
 
-void ESChart::drawESLine(QPainter &p)
+void ESChart::drawESCurve(QPainter &p)
 {
-    drawESCurve
+    _ESCurve curve = _ESCurve();
+    QPen pen(QColor(255,0,0), 10);
+    p.setPen(pen);
+    foreach(auto point, pointList)
+    {
+        curve.ESWndPoint.push_back(*point);
+        curve.ESWndBezierPoint.push_back(*point);
+        p.drawPoint(point->pos);
+    }
+    curve.draw(p);
 }
 
